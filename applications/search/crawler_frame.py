@@ -60,7 +60,12 @@ def extract_next_links(rawDataObj):
     
     Suggested library: lxml
     '''
-    outputLinks = re.findall(r'(?<=<a href=")[^"]*', rawDataObj.content)
+    temp = re.findall(r'(?<=<a href=")[^"]*', rawDataObj.content)
+    count = len(temp)
+
+    for val in temp:
+        if(val.startswith("https://") or val.startswith("http://")):
+            outputLinks += val
     print(outputLinks)
 
     return outputLinks
