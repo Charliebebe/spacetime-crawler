@@ -61,11 +61,27 @@ def extract_next_links(rawDataObj):
     Suggested library: lxml
     '''
     temp = re.findall(r'(?<=<a href=")[^"]*', rawDataObj.content)
-    count = len(temp)
+
 
     for val in temp:
+        count = 0
+        dirCount = 0
+        if "@" in val:
+              continue
         if(val.startswith("https://") or val.startswith("http://")):
             outputLinks += val
+        elif(val[count]== '.'):
+            count += 1
+            if(val[count] == '/'):
+                '''Concatenate with the rawDataObj.url'''
+                if rawDataObj.url[-1] == '/':
+                    outputLinks += val[2:]
+                else:
+                    outputLinks += val[1:]
+            elif(val[count] == '.'):
+                '''Run loop that continuously checks how many directories it's in and update dirCount then concatenate with rawDataObj.url accordingly'''
+        elif(val[count].isalpha()):
+            '''Relative path can concatenate to url'''
     print(outputLinks)
 
     return outputLinks
