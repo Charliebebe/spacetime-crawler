@@ -45,9 +45,11 @@ class CrawlerFrame(IApplication):
         print (
             "Time time spent this session: ",
             time() - self.starttime, " seconds.")
-    
+
+
 def extract_next_links(rawDataObj):
     outputLinks = []
+
     '''
     rawDataObj is an object of type UrlResponse declared at L20-30
     datamodel/search/server_datamodel.py
@@ -58,6 +60,9 @@ def extract_next_links(rawDataObj):
     
     Suggested library: lxml
     '''
+    outputLinks = re.findall(r'(?<=<a href=")[^"]*', rawDataObj.content)
+    print(outputLinks)
+
     return outputLinks
 
 def is_valid(url):
