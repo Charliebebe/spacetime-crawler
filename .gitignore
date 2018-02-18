@@ -1,1 +1,7 @@
 *.pyc
+misc.xml
+modules.xml
+spacetime-crawler.iml
+vcs.xml
+workspace.xml
+frontier_summary.txt
