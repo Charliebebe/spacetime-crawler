@@ -5,3 +5,5 @@ spacetime-crawler.iml
 vcs.xml
 workspace.xml
 frontier_summary.txt
+.idea/inspectionProfiles/
+venv/
