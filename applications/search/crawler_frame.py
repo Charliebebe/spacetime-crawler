@@ -9,9 +9,14 @@ from uuid import uuid4
 
 from urlparse import urlparse, parse_qs
 from uuid import uuid4
+from collections import Counter
 
 logger = logging.getLogger(__name__)
 LOG_HEADER = "[CRAWLER]"
+
+subdomainDict = Counter() # Dictionary { subdomain: num of URLs processed }
+outgoingLinksDict = Counter() # Dictionary { links: number of out links from it }
+incomingLinksDict = Counter() # Dictionary { links: number of in links to it }
 
 @Producer(Charlit1GiremadzAguarda2Link)
 @GetterSetter(OneCharlit1GiremadzAguarda2UnProcessedLink)
@@ -22,7 +27,6 @@ class CrawlerFrame(IApplication):
         self.starttime = time()
         self.app_id = "Charlit1GiremadzAguarda2"
         self.frame = frame
-
 
     def initialize(self):
         self.count = 0
@@ -39,9 +43,29 @@ class CrawlerFrame(IApplication):
             links = extract_next_links(downloaded)
             for l in links:
                 if is_valid(l):
+                    incomingLinksDict[l] += 1
                     self.frame.add(Charlit1GiremadzAguarda2Link(l))
+                    subdomain = l.rsplit('.uci', 1)[0].rsplit('/',1)
+                    subdomainDict[subdomain[len(subdomain) - 1]] += 1
+
 
     def shutdown(self):
+        with open("analytics.txt", "w") as f:
+            f.write('Link - Number of Outgoing Links')
+            for key, val in outgoingLinksDict.most_common():
+                f.write('{} - {}'.format(key, val))
+            f.write('\n')
+
+            f.write('Link - Number of Incoming Links')
+            for key, val in incomingLinksDict.most_common():
+                f.write('{} - {}'.format(key, val))
+            f.write('\n')
+
+            f.write('Subdomain - Number of Processed URLs')
+            for key, val in subdomainDict.most_common():
+                f.write('{} - {}'.format(key, val))
+
+        print "Wrote analytics to analytics.txt"
         print (
             "Time time spent this session: ",
             time() - self.starttime, " seconds.")
@@ -60,28 +84,23 @@ def extract_next_links(rawDataObj):
     
     Suggested library: lxml
     '''
-    temp = re.findall(r'(?<=<a href=")[^"]*', rawDataObj.content)
+    links = re.findall(r'(?<=<a href=")[^"]*', rawDataObj.content)
+    if rawDataObj.url[-1] != '/': # normalize input URL with '/'
+        rawDataObj.url += '/'
 
+    # Analytics: Outgoing links
+    if rawDataObj.url not in outgoingLinksDict:
+        outgoingLinksDict[rawDataObj.url] = len(links)
+    else:
+        return outputLinks
 
-    for val in temp:
-        count = 0
-        dirCount = 0
-        if "@" in val:
-              continue
-        if(val.startswith("https://") or val.startswith("http://")):
+    for val in links:
+        if val[-1] != '/':  # normalize link with '/'
+            val += '/'
+
+        if val.startswith("https://") or val.startswith("http://"):
             outputLinks += val
-        elif(val[count]== '.'):
-            count += 1
-            if(val[count] == '/'):
-                '''Concatenate with the rawDataObj.url'''
-                if rawDataObj.url[-1] == '/':
-                    outputLinks += val[2:]
-                else:
-                    outputLinks += val[1:]
-            elif(val[count] == '.'):
-                '''Run loop that continuously checks how many directories it's in and update dirCount then concatenate with rawDataObj.url accordingly'''
-        elif(val[count].isalpha()):
-            '''Relative path can concatenate to url'''
+        outputLinks += urlparse.urljoin(rawDataObj.url, val)
     print(outputLinks)
 
     return outputLinks
@@ -102,7 +121,7 @@ def is_valid(url):
             + "|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf" \
             + "|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso|epub|dll|cnf|tgz|sha1" \
             + "|thmx|mso|arff|rtf|jar|csv"\
-            + "|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
+            + "|rm|smil|wmv|swf|wma|zip|rar|gz|javascript:|mailto:|@|#)$", parsed.path.lower())
 
     except TypeError:
         print ("TypeError for ", parsed)
