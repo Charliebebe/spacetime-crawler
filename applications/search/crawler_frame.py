@@ -100,7 +100,7 @@ def extract_next_links(rawDataObj):
 
         if val.startswith("https://") or val.startswith("http://"):
             outputLinks += val
-        outputLinks += urlparse.urljoin(rawDataObj.url, val)
+        outputLinks += urljoin(rawDataObj.url, val)
     print(outputLinks)
 
     return outputLinks
