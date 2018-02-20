@@ -40,6 +40,9 @@ class CrawlerFrame(IApplication):
             for l in links:
                 if is_valid(l):
                     self.frame.add(Charlit1GiremadzAguarda2Link(l))
+                    # Dictionary { subdomain: num of URLs processed }
+                    # Dictionary { links: number of out links from it }
+                    # Dictionary { links: number of in links to it }
 
     def shutdown(self):
         print (
@@ -60,28 +63,17 @@ def extract_next_links(rawDataObj):
     
     Suggested library: lxml
     '''
-    temp = re.findall(r'(?<=<a href=")[^"]*', rawDataObj.content)
+    links = re.findall(r'(?<=<a href=")[^"]*', rawDataObj.content)
+    if rawDataObj.url[-1] != '/': # normalize input URL with '/'
+        rawDataObj.url += '/'
 
+    for val in links:
+        if val[-1] != '/':  # normalize link with '/'
+            val += '/'
 
-    for val in temp:
-        count = 0
-        dirCount = 0
-        if "@" in val:
-              continue
-        if(val.startswith("https://") or val.startswith("http://")):
+        if val.startswith("https://") or val.startswith("http://"):
             outputLinks += val
-        elif(val[count]== '.'):
-            count += 1
-            if(val[count] == '/'):
-                '''Concatenate with the rawDataObj.url'''
-                if rawDataObj.url[-1] == '/':
-                    outputLinks += val[2:]
-                else:
-                    outputLinks += val[1:]
-            elif(val[count] == '.'):
-                '''Run loop that continuously checks how many directories it's in and update dirCount then concatenate with rawDataObj.url accordingly'''
-        elif(val[count].isalpha()):
-            '''Relative path can concatenate to url'''
+        outputLinks += urlparse.urljoin(rawDataObj.url, val)
     print(outputLinks)
 
     return outputLinks
@@ -102,7 +94,7 @@ def is_valid(url):
             + "|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf" \
             + "|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso|epub|dll|cnf|tgz|sha1" \
             + "|thmx|mso|arff|rtf|jar|csv"\
-            + "|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
+            + "|rm|smil|wmv|swf|wma|zip|rar|gz|javascript:|mailto:|@|#)$", parsed.path.lower())
 
     except TypeError:
         print ("TypeError for ", parsed)
