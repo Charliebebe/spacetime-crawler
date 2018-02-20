@@ -7,7 +7,7 @@ import re, os
 from time import time
 from uuid import uuid4
 
-from urlparse import urlparse, parse_qs
+from urlparse import urlparse, urljoin, parse_qs
 from uuid import uuid4
 from collections import Counter
 
