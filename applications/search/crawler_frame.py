@@ -85,7 +85,6 @@ def extract_next_links(rawDataObj):
     Suggested library: lxml
     '''
     links = re.findall(r'(?<=<a href=")[^"]*', rawDataObj.content)
-    print links
     if rawDataObj.url[-1] != '/': # normalize input URL with '/'
         rawDataObj.url += '/'
 
