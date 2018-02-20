@@ -85,6 +85,7 @@ def extract_next_links(rawDataObj):
     Suggested library: lxml
     '''
     links = re.findall(r'(?<=<a href=")[^"]*', rawDataObj.content)
+    print links
     if rawDataObj.url[-1] != '/': # normalize input URL with '/'
         rawDataObj.url += '/'
 
@@ -99,9 +100,9 @@ def extract_next_links(rawDataObj):
             val += '/'
 
         if val.startswith("https://") or val.startswith("http://"):
-            outputLinks += val
-        outputLinks += urljoin(rawDataObj.url, val)
-
+            outputLinks.append(val)
+        else:
+            outputLinks.append(urljoin(rawDataObj.url, val))
     return outputLinks
 
 def is_valid(url):
