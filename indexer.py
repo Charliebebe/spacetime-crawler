@@ -5,17 +5,14 @@ forwardindex = {}
 file = open("WEBPAGES_RAW/bookkeeping.json", "r")
 book = json.load(file)
 indexes = []
-sites = []
+
 for i in book.keys():
     x = i.split("/")
     indexes.append(x)
 
-for i in book.values():
-    sites.append(i)
-
 count = 0
 
-while (count < len(sites)):
+while (count < len(indexes)):
     path = "WEBPAGES_RAW/" + indexes[count][0] + "/" + indexes[count][1]
     newfile = open(path, encoding="utf8")
     readable = newfile.read()
