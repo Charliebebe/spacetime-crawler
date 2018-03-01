@@ -85,5 +85,10 @@ for terms, docdict in inverted.items():
     for doc in docdict.keys():
         inverted[terms][doc] *= math.log10(len(forwardindex.keys() / len(docdict.keys())))
 
-# print(indexes)
-# print(book.values())
+
+with open("invertedIndex.txt", "w") as f:
+    for term, val in inverted.items():
+        f.write('{} - '.format(term))
+        for doc, score in val.items:
+            f.write('{{ doc:{} score:{} }}, '.format(doc, score))
+        f.write('\n')
