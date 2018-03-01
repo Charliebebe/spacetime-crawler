@@ -7,7 +7,7 @@ import re, os
 from time import time
 from uuid import uuid4
 
-from urlparse import urlparse, parse_qs
+from urlparse import urlparse, urljoin, parse_qs
 from uuid import uuid4
 from collections import Counter
 
@@ -51,19 +51,19 @@ class CrawlerFrame(IApplication):
 
     def shutdown(self):
         with open("analytics.txt", "w") as f:
-            f.write('Link - Number of Outgoing Links')
+            f.write('Link - Number of Outgoing Links\n')
             for key, val in outgoingLinksDict.most_common():
-                f.write('{} - {}'.format(key, val))
+                f.write('{} - {}\n'.format(key, val))
             f.write('\n')
 
-            f.write('Link - Number of Incoming Links')
+            f.write('Link - Number of Incoming Links\n')
             for key, val in incomingLinksDict.most_common():
-                f.write('{} - {}'.format(key, val))
+                f.write('{} - {}\n'.format(key, val))
             f.write('\n')
 
-            f.write('Subdomain - Number of Processed URLs')
+            f.write('Subdomain - Number of Processed URLs\n')
             for key, val in subdomainDict.most_common():
-                f.write('{} - {}'.format(key, val))
+                f.write('{} - {}\n'.format(key, val))
 
         print "Wrote analytics to analytics.txt"
         print (
@@ -99,10 +99,9 @@ def extract_next_links(rawDataObj):
             val += '/'
 
         if val.startswith("https://") or val.startswith("http://"):
-            outputLinks += val
-        outputLinks += urlparse.urljoin(rawDataObj.url, val)
-    print(outputLinks)
-
+            outputLinks.append(val)
+        else:
+            outputLinks.append(urljoin(rawDataObj.url, val))
     return outputLinks
 
 def is_valid(url):
