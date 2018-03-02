@@ -4,11 +4,11 @@ from bs4 import BeautifulSoup
 import snowballstemmer
 from collections import Counter
 import math
-
+import io
 # Dictionary where keys = indexes and values = tokens
 forwardindex = {}
 
-file = open("WEBPAGES_RAW/bookkeeping.json", "r")
+file = io.open("WEBPAGES_RAW/bookkeeping.json", "r")
 
 #Dictionary that holds json formated data from file
 book = json.load(file)
@@ -18,7 +18,7 @@ stemmer = snowballstemmer.stemmer('english')
 # For every [directory, filename] pair in book.keys()
 for localpath in book.keys():
     path = "WEBPAGES_RAW/" + localpath
-    newfile = open(path, encoding="utf8")   # Open path
+    newfile = io.open(path, encoding="utf8")   # Open path
     readable = newfile.read().lower()
 #    tokens = re.findall(r'[0-9a-z]+', readable)  # List of parsed tokens
     if '<html>' in readable:    # Ignore non HTML files
@@ -33,31 +33,30 @@ for localpath in book.keys():
         forwardindex[path]['h6'] = []
         forwardindex[path]['title'] = []
 
-        for text in [el.text for el in soup.find_all('p')]:
-            forwardindex[path]['normal'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', text)))
-        for text in [el.text for el in soup.find_all('span')]:
-            forwardindex[path]['normal'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', text)))
-        for text in [el.text for el in soup.find_all('div')]:
-            forwardindex[path]['normal'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', text)))
+        for el in soup.find_all('p'):
+            forwardindex[path]['normal'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', el.text)))
+        for el in soup.find_all('span'):
+            forwardindex[path]['normal'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', el.text)))
+        for el in soup.find_all('div'):
+            forwardindex[path]['normal'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', el.text)))
 
-        for text in [el.text for el in soup.find_all('h1')]:
-            forwardindex[path]['h1'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', text)))
-        for text in [el.text for el in soup.find_all('h2')]:
-            forwardindex[path]['h2'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', text)))
-        for text in [el.text for el in soup.find_all('h3')]:
-            forwardindex[path]['h3'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', text)))
-        for text in [el.text for el in soup.find_all('h4')]:
-            forwardindex[path]['h4'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', text)))
-        for text in [el.text for el in soup.find_all('h5')]:
-            forwardindex[path]['h5'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', text)))
-        for text in [el.text for el in soup.find_all('h6')]:
-            forwardindex[path]['h6'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', text)))
-        for text in [el.text for el in soup.find_all('title')]:
-            forwardindex[path]['title'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', text)))
+        for el in soup.find_all('h1'):
+            forwardindex[path]['h1'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', el.text)))
+        for el in soup.find_all('h2'):
+            forwardindex[path]['h2'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', el.text)))
+        for el in soup.find_all('h3'):
+            forwardindex[path]['h3'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', el.text)))
+        for el in soup.find_all('h4'):
+            forwardindex[path]['h4'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', el.text)))
+        for el in soup.find_all('h5'):
+            forwardindex[path]['h5'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', el.text)))
+        for el in soup.find_all('h6'):
+            forwardindex[path]['h6'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', el.text)))
+        for el in soup.find_all('title'):
+            forwardindex[path]['title'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', el.text)))
 
 
 inverted = {}
-
 
 for path, termsdict in forwardindex.items():
     for tagelement, termlist in termsdict.items():
@@ -76,21 +75,55 @@ for path, termsdict in forwardindex.items():
                     forwardindex[path]['h6'].count(term)*1.3 + \
                     forwardindex[path]['title'].count(term)*2
 
-                inverted[term][path] = 1 + math.log10(inverted[term][path]) # Log tf
+                # Log-tf, divided by total tf in that document
+                inverted[term][path] = 1 + math.log10(inverted[term][path] / \
+                                                      (len(forwardindex[path]['normal']) + \
+                                                       len(forwardindex[path]['h1']) + \
+                                                       len(forwardindex[path]['h2']) + \
+                                                       len(forwardindex[path]['h3']) + \
+                                                       len(forwardindex[path]['h4']) + \
+                                                       len(forwardindex[path]['h5']) + \
+                                                       len(forwardindex[path]['h6']) + \
+                                                       len(forwardindex[path]['title']))) # Log tf
 
-# Idf
+# Idf normalization
 for terms, docdict in inverted.items():
     for doc in docdict.keys():
-        inverted[terms][doc] *= math.log10(len(forwardindex.keys() / len(docdict.keys())))
+        inverted[terms][doc] *= math.log10( len(forwardindex.keys()) / len(docdict.keys()) )
 
 
-with open("invertedIndex.txt", "w") as f:
-    for term, val in inverted.items():
-        f.write('{} - '.format(term))
-        for doc, score in val.items:
-            f.write('{{ doc:{} score:{} }}, '.format(doc, score))
-        f.write('\n')
+# with open("invertedIndex.txt", "w") as f:
+#     for term, val in inverted.items():
+#         f.write('{} - '.format(term))
+#         for doc, score in val.items:
+#             f.write('{{ doc:{} score:{} }}, '.format(doc, score))
+#         f.write('\n')
 
-print 'Written to file invertedIndex.txt\n'
+inverted_index = []
+
+# Create JSON formatted array with
+# SCHEMA:
+#   [   {   term: 'cat',
+#           docs: [ {   docname: docname1,
+#                       tf-idf: num },
+#                   {   docname: docname2,
+#                       tf-idf: num }]
+#       },
+#       {   term: 'dog',
+#           docs: [ {   docname: docname1,
+#                       tf-idf: num },
+#                   {   docname: docname2,
+#                       tf-idf: num }]
+#       },]
+for term, docs in inverted.items():
+    dict = {}
+    dict['term'] = term
+    dict['docs'] = [{'doc': doc, 'tfidf': tfidf} for doc, tfidf in docs.items()]
+    inverted_index.append(dict)
+
+with io.open('inverted_index.json', 'w', encoding='utf-8') as json_file:
+    json.dump(inverted_index, json_file, ensure_ascii=False)
+
+print 'Written to file inverted_index.json\n'
 print 'Number of documents: {}'.format(len(forwardindex.keys()))
 print 'Number of unique words (stemmed): {}'.format(len(inverted.keys()))
