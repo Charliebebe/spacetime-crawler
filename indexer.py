@@ -14,7 +14,7 @@ file = io.open("WEBPAGES_RAW/bookkeeping.json", "r")
 book = json.load(file)
 
 stemmer = snowballstemmer.stemmer('english')
-
+i = 0
 # For every [directory, filename] pair in book.keys()
 for localpath in book.keys():
     path = "WEBPAGES_RAW/" + localpath
@@ -55,6 +55,8 @@ for localpath in book.keys():
         for el in soup.find_all('title'):
             forwardindex[path]['title'].extend(stemmer.stemWords(re.findall('[0-9a-z]+', el.text)))
 
+        print '{}-th iteration. Processed {}\n'.format(i, path)
+        i += 1
 
 inverted = {}
 
@@ -64,40 +66,26 @@ for path, termsdict in forwardindex.items():
             if term not in inverted:
                 inverted[term] = Counter()  # {term: {doc: tf-idf weighted by tags}
 
-                # Set tag scaled tf
-                inverted[term][path] = \
-                    forwardindex[path]['normal'].count(term) + \
-                    forwardindex[path]['h1'].count(term)*2 + \
-                    forwardindex[path]['h2'].count(term)*1.7 + \
-                    forwardindex[path]['h3'].count(term)*1.6 + \
-                    forwardindex[path]['h4'].count(term)*1.5 + \
-                    forwardindex[path]['h5'].count(term)*1.4 + \
-                    forwardindex[path]['h6'].count(term)*1.3 + \
-                    forwardindex[path]['title'].count(term)*2
+            # Set tag scaled tf
+            inverted[term][path] += \
+                forwardindex[path]['normal'].count(term) + \
+                forwardindex[path]['h1'].count(term)*2 + \
+                forwardindex[path]['h2'].count(term)*1.7 + \
+                forwardindex[path]['h3'].count(term)*1.6 + \
+                forwardindex[path]['h4'].count(term)*1.5 + \
+                forwardindex[path]['h5'].count(term)*1.4 + \
+                forwardindex[path]['h6'].count(term)*1.3 + \
+                forwardindex[path]['title'].count(term)*2
 
-                # Log-tf, divided by total tf in that document
-                inverted[term][path] = 1 + math.log10(inverted[term][path] / \
-                                                      (len(forwardindex[path]['normal']) + \
-                                                       len(forwardindex[path]['h1']) + \
-                                                       len(forwardindex[path]['h2']) + \
-                                                       len(forwardindex[path]['h3']) + \
-                                                       len(forwardindex[path]['h4']) + \
-                                                       len(forwardindex[path]['h5']) + \
-                                                       len(forwardindex[path]['h6']) + \
-                                                       len(forwardindex[path]['title']))) # Log tf
+            print '{}-th iteration: Processed {}\n'.format(i, term)
+            i += 1
 
 # Idf normalization
 for terms, docdict in inverted.items():
     for doc in docdict.keys():
+        # Log-tf, divided by total tf in that document
+        inverted[term][doc] = 1 + math.log10(inverted[term][doc])  # Log tf
         inverted[terms][doc] *= math.log10( len(forwardindex.keys()) / len(docdict.keys()) )
-
-
-# with open("invertedIndex.txt", "w") as f:
-#     for term, val in inverted.items():
-#         f.write('{} - '.format(term))
-#         for doc, score in val.items:
-#             f.write('{{ doc:{} score:{} }}, '.format(doc, score))
-#         f.write('\n')
 
 inverted_index = []
 
@@ -122,7 +110,7 @@ for term, docs in inverted.items():
     inverted_index.append(dict)
 
 with io.open('inverted_index.json', 'w', encoding='utf-8') as json_file:
-    json.dump(inverted_index, json_file, ensure_ascii=False)
+    json_file.write(unicode(json.dumps(inverted_index, ensure_ascii=False)))
 
 print 'Written to file inverted_index.json\n'
 print 'Number of documents: {}'.format(len(forwardindex.keys()))
