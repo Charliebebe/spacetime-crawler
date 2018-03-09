@@ -35,8 +35,6 @@ for localpath, link in book.items():
         corpus[count] = (link, doc)
     else:
         corpus[count] = (link, '')
-    if count == 19:
-       break
 
     count = count + 1
 
@@ -59,7 +57,10 @@ for x,y in zip(row, col):
 # print (corpus)
 print (inverted['irvin'])
 
+with io.open('inverted_index.json', 'w', encoding='utf-8') as json_file:
+    json.dump(inverted, json_file, ensure_ascii=False)
 
+print ('Written to file inverted_index.json\n')
 
 # for key,val in corpus.items():
 #     X = vectorizer.transform([val])
