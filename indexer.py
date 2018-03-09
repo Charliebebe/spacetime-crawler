@@ -32,29 +32,45 @@ for localpath, link in book.items():
         #     doc= ' '.join([doc, ' '.join(stemmer.stemWords(re.findall(r'[0-9a-z]+', el.text)))])
 
         doc = ' '.join([' '.join(stemmer.stemWords(re.findall(r'[0-9a-z]+', el.text))) for el in soup.find_all('p')])
-        corpus[link] = doc
+        corpus[count] = (link, doc)
     else:
-        corpus[link] = ''
-    if count == 49:
+        corpus[count] = (link, '')
+    if count == 19:
        break
 
     count = count + 1
 
 
 vectorizer = TfidfVectorizer(stop_words='english',min_df=1,lowercase=True, sublinear_tf=True)
-X = vectorizer.fit_transform(corpus.values())
+c = [value[1] for value in corpus.values()]
+X = vectorizer.fit_transform(c)
 import numpy
 numpy.set_printoptions(threshold=numpy.nan)
-print(X.T)
+
+inverted = {}
+feature_names = vectorizer.get_feature_names()
+row,col = numpy.nonzero(X.T)
+for x,y in zip(row, col):
+    if feature_names[x] not in inverted:
+        inverted[feature_names[x]] = []
+    inverted[feature_names[x]].append({corpus[y][0]: X[y,x]})
+    # print (feature_names[x], corpus[y][0],  X[y,x])
 # print(vectorizer.get_feature_names())
 # print (corpus)
-feature_names = vectorizer.get_feature_names()
+print (inverted['irvin'])
 
 
 
+# for key,val in corpus.items():
+#     X = vectorizer.transform([val])
+#     doctermidf = [{}]
+#     for col in X.nonzero()[1]:
+#
+#         print (feature_names[col], ' - ', X[0, col])
+
+    # print(feature_names[X[0][1]], " - ", X[1])
 # for col, termrow in enumerate(X.T):
 #     print (feature_names[col], ' - '),
-#     print (termrow.shape)
 #     for doc in termrow:
 #         print (doc),
 #     print ('\n')
