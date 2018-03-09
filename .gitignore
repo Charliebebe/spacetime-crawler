@@ -7,3 +7,5 @@ workspace.xml
 frontier_summary.txt
 .idea/inspectionProfiles/
 venv/
+analytics.txt
+query_results.txt
