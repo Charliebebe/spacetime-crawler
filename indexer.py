@@ -8,11 +8,14 @@ import math
 import io
 import string
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
+import numpy as np
+import cPickle
+
 # Dictionary where keys = indexes and values = tokens
 
 
 file = io.open("WEBPAGES_RAW/bookkeeping.json", "r")
-
 
 
 #Dictionary that holds json formated data from file
@@ -39,25 +42,34 @@ for localpath, link in book.items():
 
 
 vectorizer = TfidfVectorizer(stop_words='english',min_df=1,lowercase=True, sublinear_tf=True)
+
+
 c = [value[1] for value in corpus.values()]
 X = vectorizer.fit_transform(c)
-import numpy
-numpy.set_printoptions(threshold=numpy.nan)
+cPickle.dump(vectorizer, open("vectorizer.pickle", "wb"))
 
-inverted = {}
-feature_names = vectorizer.get_feature_names()
-row,col = numpy.nonzero(X.T)
-for x,y in zip(row, col):
-    if feature_names[x] not in inverted:
-        inverted[feature_names[x]] = []
-    inverted[feature_names[x]].append({corpus[y][0]: X[y,x]})
-    # print (feature_names[x], corpus[y][0],  X[y,x])
-# print(vectorizer.get_feature_names())
-# print (corpus)
-# print (inverted['irvin'])
+with io.open('corpus.json', 'w', encoding='utf-8') as json_file:
+    json.dump(unicode(corpus), json_file, ensure_ascii=False, indent=4)
 
-with io.open('inverted_index.json', 'w', encoding='utf-8') as json_file:
-    json.dump(unicode(inverted), json_file, ensure_ascii=False, indent=4)
+with io.open('tfidf_matrix.json', 'w', encoding='utf-8') as json_file:
+    json.dump(unicode({"data": np.ndarray.tolist(X.toarray())}), json_file, ensure_ascii=False, indent=4)
+
+
+# import numpy
+# numpy.set_printoptions(threshold=numpy.nan)
+#
+# inverted = {}
+# feature_names = vectorizer.get_feature_names()
+# row,col = numpy.nonzero(X.T)
+# for x,y in zip(row, col):
+#     if feature_names[x] not in inverted:
+#         inverted[feature_names[x]] = []
+#     inverted[feature_names[x]].append({corpus[y][0]: X[y,x]})
+
+# WRITE TF IDF INVERTED INDEX JSON TO FILE
+
+# with io.open('inverted_index.json', 'w', encoding='utf-8') as json_file:
+#    json.dump(unicode(inverted), json_file, ensure_ascii=False, indent=4)
 
 print ('Written to file inverted_index.json\n')
 print ('Number of documents: ', X.shape[0])
