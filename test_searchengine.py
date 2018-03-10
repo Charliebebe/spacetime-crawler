@@ -21,14 +21,17 @@ corpus = json.load(io.open("corpus.json", "r"))
 corpus = ast.literal_eval(corpus)
 
 # Load fitted tfidf-matrix
-tfidf_matrix = json.load(io.open("tfidf_matrix.json", "r"))
-tfidf_matrix = ast.literal_eval(tfidf_matrix)['data']
+# tfidf_matrix = json.load(io.open("tfidf_matrix.json", "r"))
+# tfidf_matrix = ast.literal_eval(tfidf_matrix)['data']
+
+tfidf_matrix = cPickle.load(open("tfidf_matrix.pickle", "rb"))
+
 
 # Load trained tfidf-vectorizer
 vectorizer = cPickle.load(open("vectorizer.pickle", "rb"))
 
 # MAIN QUERY
-query = "slide 9 of 50"
+query = "mondego"
 query = " ".join(stemmer.stemWords(re.findall(r'[0-9a-z]+', query)))
 
 # Calculate cosine similarity, return top document indices
@@ -38,4 +41,5 @@ related_docs_indices = cosine_similarities.argsort()[:-5:-1]
 
 print(related_docs_indices)
 print(cosine_similarities[related_docs_indices])
-# print([corpus[related_docs_indices[0]]])
+print([corpus[index][0] for index in related_docs_indices])
+# corpus[index][0] for doc link, corpus[index][1] for doc content

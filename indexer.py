@@ -51,8 +51,10 @@ cPickle.dump(vectorizer, open("vectorizer.pickle", "wb"))
 with io.open('corpus.json', 'w', encoding='utf-8') as json_file:
     json.dump(unicode(corpus), json_file, ensure_ascii=False, indent=4)
 
-with io.open('tfidf_matrix.json', 'w', encoding='utf-8') as json_file:
-    json.dump(unicode({"data": np.ndarray.tolist(X.toarray())}), json_file, ensure_ascii=False, indent=4)
+cPickle.dump(X, open("tfidf_matrix.pickle", "wb"))
+
+# with io.open('tfidf_matrix.json', 'w', encoding='utf-8') as json_file:
+#     json.dump(unicode({"data": np.ndarray.tolist(X.toarray())}), json_file, ensure_ascii=False, indent=4)
 
 
 # import numpy
