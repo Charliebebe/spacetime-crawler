@@ -43,3 +43,10 @@ print(related_docs_indices)
 print(cosine_similarities[related_docs_indices])
 print([corpus[index][0] for index in related_docs_indices])
 # corpus[index][0] for doc link, corpus[index][1] for doc content
+
+
+def query(textquery):
+    textquery = ' '.join(stemmer.stemWords(re.findall(r'[0-9a-z]+', textquery)))
+    textquerytfidf = vectorizer.transform([textquery])
+    cosine_similarities = linear_kernel(textquerytfidf, tfidf_matrix).flatten()
+    related_docs_indices = cosine_similarities.argsort()[:-5:-1]
